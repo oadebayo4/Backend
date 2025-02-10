@@ -8,7 +8,7 @@ const app = express()
 app.use(cors())
 const router = express.Router()
 
-// making an api using routes
+// making an api using routes u
 // Routes are used to handle browser request. The look like URLs. The difference is that when a browser requests a route, it is dynamically handled by using a function.
 
 router.get("/songs", function(req,res){

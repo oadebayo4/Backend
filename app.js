@@ -1,38 +1,71 @@
-// setup.. this is similar to when we use our default tags in html
-
-const express = require("express")
-var cors = require("cors")
-
-// activate or tell this app variable to be an express server
+const express = require("express");
+const Song = require("./models/song");
+var cors = require("cors");
 const app = express()
 app.use(cors())
-const router = express.Router()
+// Middleware that parses HTTP requests with JSON body
 
-// making an api using routes u
-// Routes are used to handle browser request. The look like URLs. The difference is that when a browser requests a route, it is dynamically handled by using a function.
+app.use(express.json());
 
-router.get("/songs", function(req,res){
-    const songs = [
-    {
-        title: "We Found Love",
-        artist: "Rihanna",
-        popularity: 10,
-        releaseDate: new Date(2011, 9, 22),
-        genre: ["electro house"]
-    },
-    {
-        title: "Happy",
-        artist: "Pharrell William",
-        popularity: 10,
-        releaseDate: new Date (2013, 11, 21),
-        genre: ["soul", "new soul"]
+const router = express.Router();
+
+// Get list of all songs in the database
+router.get("/songs", async(req,res) =>{
+    try{
+        const songs = await Song.find({})
+        res.send(songs)
+        console.log(songs)
     }
+    catch (err){
+        console.log(err)
+    }
+}),
 
-    
-];
-res.json(songs)
+
+
+router.post("/songs", async(req, res) =>{
+    try {
+       const song = await new Song(req.body);
+       await song.save();
+       res.status(201).json(song);
+       console.log(song)
+    }
+    catch (err) {
+       res.status(400).send(err);
+    }
+ });
+  
+//Grab a single song in the database
+router.get("/songs/:id", async (req,res) =>{
+    try{
+        const song = await Song.findById(req.params.id)
+        res.json(song)
+
+    }
+    catch (err) {
+        res.status(400).send(err)
+    }
 })
 
-//all requests that usually use an api start with /api... so the url would be localhost:3000/api/songs
-app.use("/api", router)
-app.listen(3000)
+
+//update is to update an existing record/resource/database FileSystemEntry... it uses a put request
+router.put("/songs/:/id", async(req,res) =>{
+    //first we need to find and update the song the front end wants us to update
+    //to do this we need to request the id of the song from request
+    //and the find it in the database and update it
+    try {
+        const song = req.body
+        await Song.updateOne({_id: req.params.id},song)
+        console.log(song)
+        res.sendStatus(204)
+
+    }
+    catch(err){
+        res.status(400).send(err)
+    }
+    
+})
+
+app.use("/api", router);
+
+app.listen(3000);

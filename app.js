@@ -1,13 +1,41 @@
 const express = require("express");
 const Song = require("./models/song");
-var cors = require("cors");
-const app = express()
+var cors = require("cors")
+// const bodyParser = require("body-parser");
+const jwt = require("jwt-simple")
+const User = require("./models/users")
+
+const app = express();
 app.use(cors())
 // Middleware that parses HTTP requests with JSON body
 
 app.use(express.json());
 
 const router = express.Router();
+const secret = "supersecret";
+
+// create new user to the database
+router.post("/user", async(req, res) =>{
+
+    if (!req.body.username || !req.body.password) {
+       res.status(400).json({ error: "Missing username and/or password"})
+    }
+    const newuser = await new User({
+        username: req.body.username,
+        password: req.body.password,
+        status:   req.body.status
+    })
+
+    try {
+        await newUser.save()
+        console.log(newUser)
+        res.sendStatus(201) //created
+     }
+     catch (err){
+        res.status(400).send(err);
+     }
+
+})
 
 // Get list of all songs in the database
 router.get("/songs", async(req,res) =>{
@@ -64,6 +92,19 @@ router.put("/songs/:/id", async(req,res) =>{
         res.status(400).send(err)
     }
     
+})
+
+router.delete("/songs/:id", async(req,res) =>{
+    //method or function in mongoose/mongo to delete a single instance of a song or object
+    try{
+        const song = await Song.findById(req.params.id)
+        console.log(song)
+        await Song.deleteOne({ _id: song._id})
+        res.sendStatus(204)
+    }
+    catch(err){
+        res.status(400).send(err)
+    }
 })
 
 app.use("/api", router);
